@@ -2,10 +2,11 @@
     <!-- Add permission to send SMS -->
     <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
     <!-- If targeting Android 10 and above, add permission for reading phone state -->
+       <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-
+<uses-permission android:name="android.permission.READ_SMS"/>
+<uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <application
         android:label="send_sms"
         android:name="${applicationName}"

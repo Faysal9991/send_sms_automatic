@@ -16,24 +16,68 @@ class MessageProvider extends ChangeNotifier {
   bool _isProcessing = false;
   List<Contact> _contacts = [];
   String? _selectedPhoneNumber;
-  TimeOfDay? _selectedTime; 
-
+  TimeOfDay? _selectedTime;
+  int _delayDuration = 0;
+  int _smsQantity = 0;
   // Getters
+  int get smsQantity => _smsQantity;
+  int get delayDuration => _delayDuration;
   String get selectedSim => _selectedSim;
   String get message => _message;
   bool get isProcessing => _isProcessing;
   List<Contact> get contacts => _contacts;
   String? get selectedPhoneNumber => _selectedPhoneNumber;
-TimeOfDay? get selectedTime => _selectedTime; // Getter for selectedTime
+  TimeOfDay? get selectedTime => _selectedTime; // Getter for selectedTime
   MessageProvider() {
     _loadContacts();
   }
 
-void setSelectedTime(TimeOfDay? time) {
-    _selectedTime = time;
+  void changeDelayDuration(int newDelayDuration, BuildContext context) {
+    _delayDuration = newDelayDuration;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Selected Time  $newDelayDuration'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating, // Allows custom positioning
+        margin: EdgeInsets.only(
+          top: 10, // Positions it near the top
+          left: 10,
+          right: 10,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10), // Optional: rounded corners
+        ),
+        duration: Duration(seconds: 3), // Optional: control how long it shows
+      ),
+    );
     notifyListeners();
   }
 
+  void changeSMSQuantity(int newDelayDuration, BuildContext context) {
+    _smsQantity = newDelayDuration;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('selected quantity  $newDelayDuration'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating, // Allows custom positioning
+        margin: EdgeInsets.only(
+          top: 10, // Positions it near the top
+          left: 10,
+          right: 10,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10), // Optional: rounded corners
+        ),
+        duration: Duration(seconds: 3), // Optional: control how long it shows
+      ),
+    );
+    notifyListeners();
+  }
+
+  void setSelectedTime(TimeOfDay? time) {
+    _selectedTime = time;
+    notifyListeners();
+  }
 
   int get simValue {
     switch (_selectedSim) {
@@ -111,22 +155,41 @@ void setSelectedTime(TimeOfDay? time) {
     return true;
   }
 
-  Future<bool> _requestSmsPermission() async {
-    var status = await Permission.sms.status;
-    if (!status.isGranted) {
-      status = await Permission.sms.request();
-      return status.isGranted;
+ Future<bool> _requestSmsPermission() async {
+    // Request SMS permission
+    var smsStatus = await Permission.sms.status;
+    if (!smsStatus.isGranted) {
+      smsStatus = await Permission.sms.request();
     }
-    return true;
+
+    // Request phone state permission
+    var phoneStatus = await Permission.phone.status;
+    if (!phoneStatus.isGranted) {
+      phoneStatus = await Permission.phone.request();
+    }
+
+    // Check additional permissions
+    var contactStatus = await Permission.contacts.status;
+    if (!contactStatus.isGranted) {
+      contactStatus = await Permission.contacts.request();
+    }
+
+    // Return true only if all critical permissions are granted
+    return smsStatus.isGranted &&
+        phoneStatus.isGranted &&
+        contactStatus.isGranted;
   }
 
   Future<void> sendSms() async {
-    await _requestSmsPermission();
+    bool permissionsGranted = await _requestSmsPermission();
+    if (!permissionsGranted) {
+      // Handle permission denial
+      print('One or more permissions were denied');
+      // Optionally show a dialog or snackbar to user
+    }
   }
-
   Future<void> sendSmsUsingSim(
     BuildContext context,
-    String phoneNumber,
     String message,
     int simSlot,
   ) async {
@@ -146,26 +209,43 @@ void setSelectedTime(TimeOfDay? time) {
     try {
       if (simSlot == 3) {
         for (String number in savedNumbers) {
-          await sendMessageChanel(number, message, 1);
-           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("SMS Sent Successfully from SIM 1"),
-              backgroundColor: Colors.green,
-            ),
-          );
+          for (int i = 0; i < _smsQantity; i++) {
+            await sendMessageChanel(number, message, 1);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("SMS Sent Successfully from SIM 1"),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Future.delayed(Duration(seconds: _delayDuration));
+          }
         }
-       for (String number in savedNumbers) {
-         await sendMessageChanel(number, message, 2);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("SMS Sent Successfully from SIM 2"), backgroundColor: Colors.green),
-          );
+        for (String number in savedNumbers) {
+          for (int i = 0; i < _smsQantity; i++) {
+            await sendMessageChanel(number, message, 2);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("SMS Sent Successfully from SIM 2"),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Future.delayed(Duration(seconds: _delayDuration));
+          }
         }
-      }else{
-           final String result = await platform.invokeMethod('sendSms', {
-          'phoneNumber': phoneNumber,
-          'message': message,
-          'simSlot': simSlot,
-        });
+      } else {
+        for (String number in savedNumbers) {
+          for (int i = 0; i < _smsQantity; i++) {
+            await sendMessageChanel(number, message, simSlot);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("SMS Sent Successfully from SIM $simSlot"),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Future.delayed(Duration(seconds: _delayDuration));
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('SMS Sent Successfully from SIM $simSlot!'),
@@ -173,10 +253,6 @@ void setSelectedTime(TimeOfDay? time) {
           ),
         );
       }
-   
-
-
-   
     } on PlatformException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -198,7 +274,7 @@ void setSelectedTime(TimeOfDay? time) {
     return await platform.invokeMethod('sendSms', {
       'phoneNumber': phoneNumber,
       'message': message,
-      'simSlot': simSlot - 1,
+      'simSlot': simSlot,
     });
   }
 }

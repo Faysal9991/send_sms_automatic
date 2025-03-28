@@ -1,5 +1,6 @@
 // home_page.dart
 import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:provider/provider.dart';
 import 'package:send_sms/message_provider.dart';
 import 'package:send_sms/select_from_contract.dart';
@@ -16,13 +17,13 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final List<String> simOptions = ['SIM 1', 'SIM 2', 'Dual SIM'];
-  String? _selectedPhoneNumber;
+ 
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-        Provider.of<MessageProvider>(context, listen: false).loadSavedNumbers();
+      Provider.of<MessageProvider>(context, listen: false).loadSavedNumbers();
       Provider.of<MessageProvider>(context, listen: false).sendSms();
     });
   }
@@ -34,35 +35,29 @@ class _HomePageState extends State<HomePage> {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.teal,
-            leading: IconButton(onPressed: (){
+            leading: IconButton(
+              onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ContactList()),
                 );
-            }, icon: Icon(Icons.contact_page,)),
-            centerTitle: true, title: const Text('SMS Provider')),
+              },
+              icon: Icon(Icons.contact_page),
+            ),
+            centerTitle: true,
+            title: const Text('SMS Provider'),
+          ),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
               child: Column(
+                spacing: 10,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                 
-
-                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.teal,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0), // Adjust radius as needed
-    ),
-  ),
-  onPressed: () {}, // Empty function, add your logic here
-  child: const Text("Duration",style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),),
-),
-                         ElevatedButton(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.teal,
                           shape: RoundedRectangleBorder(
@@ -71,17 +66,128 @@ class _HomePageState extends State<HomePage> {
                             ), // Adjust radius as needed
                           ),
                         ),
-                        onPressed: () {}, // Empty function, add your logic here
-                        child: const Text("Quantity",
+                        onPressed: () {
+                          showMaterialModalBottomSheet(
+                            context: context,
+                            builder:
+                                (context) => SizedBox(
+                                  height: 400,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.vertical,
+                                          itemCount: 20,
+                                          itemBuilder: (context, index) {
+                                            return InkWell(
+                                              onTap: () {
+                                                provider.changeDelayDuration(
+                                                  index+1,context
+                                                );
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Card(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    8.0,
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      "Time ${index + 1} second",
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 20,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          );
+                        }, // Empty function, add your logic here
+                        child: const Text(
+                          "Duration",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      TimePickerButton()
-                  ],
-                 ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              8.0,
+                            ), // Adjust radius as needed
+                          ),
+                        ),
+                        onPressed: () {
+                                  showMaterialModalBottomSheet(
+                            context: context,
+                            builder:
+                                (context) => SizedBox(
+                                  height: 400,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.vertical,
+                                          itemCount: 20,
+                                          itemBuilder: (context, index) {
+                                            return InkWell(
+                                              onTap: () {
+                                                provider.changeSMSQuantity(
+                                                  index + 1,
+                                                  context,
+                                                );
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Card(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    8.0,
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      "SMS Quantity ${index + 1}",
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 20,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                          );
+                    
+                        }, // Empty function, add your logic here
+                        child: const Text(
+                          "Quantity",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      TimePickerButton(),
+                    ],
+                  ),
                   // SIM Selection
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -105,7 +211,10 @@ class _HomePageState extends State<HomePage> {
                               value: value,
                               child: Row(
                                 children: [
-                                  const Icon(Icons.sim_card, color: Colors.blue),
+                                  const Icon(
+                                    Icons.sim_card,
+                                    color: Colors.blue,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(value),
                                 ],
@@ -115,8 +224,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-              
-                
+
                   TextField(
                     controller: _messageController,
                     decoration: const InputDecoration(
@@ -127,30 +235,45 @@ class _HomePageState extends State<HomePage> {
                     onChanged: (value) => provider.setMessage(value),
                   ),
                   const SizedBox(height: 16),
-              
+
                   // Send Button
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),),
                     onPressed:
                         provider.isProcessing
                             ? null
                             : () {
-                              final phoneNumber =
-                                  _phoneController.text.isNotEmpty
-                                      ? _phoneController.text
-                                      : "01625930011";
-                              provider.sendSmsUsingSim(
-                                context,
-                                phoneNumber,
-                                _messageController.text,
-                                provider.simValue,
-                              );
+
+                              if(provider.smsQantity <=0){
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "Please  select Minimum 1 Message",
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }else{
+                                provider.sendSmsUsingSim(
+                                  context,
+                                  _messageController.text,
+                                  provider.simValue,
+                                );
+                              }
+                            
                             },
                     child:
                         provider.isProcessing
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Send SMS'),
+                            ? const CircularProgressIndicator(
+                              color: Colors.teal,
+                            )
+                            : const Text('Send SMS',style: TextStyle(color: Colors.white),),
                   ),
-              
+
                   // Contact List
                   if (provider.contacts.isNotEmpty) ...[
                     const SizedBox(height: 16),
@@ -158,10 +281,10 @@ class _HomePageState extends State<HomePage> {
                       'Saved Contacts:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                ],
-                    ListView.builder(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
+                  ],
+                  ListView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
                     itemCount: provider.savedNumbers.length,
                     itemBuilder: (context, index) {
                       final contact = provider.savedNumbers[index];
@@ -173,7 +296,10 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(color: Colors.white),
                           ),
                           selectedTileColor: Colors.blue.withOpacity(0.1),
-                          trailing: const Icon(Icons.remove, color: Colors.white),
+                          trailing: const Icon(
+                            Icons.remove,
+                            color: Colors.white,
+                          ),
                           onTap: () {
                             provider.removeNumber(contact);
                           },
@@ -181,7 +307,6 @@ class _HomePageState extends State<HomePage> {
                       );
                     },
                   ),
-                      
                 ],
               ),
             ),
@@ -190,7 +315,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 
   @override
   void dispose() {
